@@ -1,1 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Spelling Checker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .config-section {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-container {
+            padding: 0 30px 20px 30px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .results-section {
+            padding: 30px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-header h2 {
+            color: #333;
+            font-size: 1.8em;
+        }
+
+        .results-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .results-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .error-line {
+            margin-bottom: 8px;
+        }
+
+        .error-word {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .suggestion {
+            color: #28a745;
+        }
+
+        .page-header {
+            color: #667eea;
+            font-weight: bold;
+            margin: 15px 0 10px 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .results-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Website Spelling Checker</h1>
+            <p>Scan websites for spelling mistakes with UK/US English support</p>
+        </div>
+
+        <div class="config-section">
+            <div class="config-grid">
+                <div class="form-group">
+                    <label for="websiteUrl">Website URL</label>
+                    <input type="url" id="websiteUrl" placeholder="https://example.com" value="https://">
+                </div>
+                
+                <div class="form-group">
+                    <label for="maxPages">Maximum Pages</label>
+                    <input type="number" id="maxPages" value="10" min="1" max="100">
+                </div>
+                
+                <div class="form-group">
+                    <label for="delay">Delay (seconds)</label>
+                    <input type="number" id="delay" value="1" min="0.5" max="10" step="0.5">
+                </div>
+                
+                <div class="form-group">
+                    <label for="language">Language Preference</label>
+                    <select id="language">
+                        <option value="both">Both UK & US English</option>
+                        <option value="us">US English Only</option>
+                        <option value="uk">UK English Only</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" id="startBtn">Start Scan</button>
+                <button class="btn btn-danger" id="stopBtn" disabled>Stop</button>
+                <button class="btn btn-success" id="saveBtn" disabled>Save Report</button>
+                <button class="btn btn-secondary" id="clearBtn">Clear Results</button>
+            </div>
+        </div>
+
+        <div class="progress-container" id="progressContainer" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Preparing scan...</div>
+        </div>
+
+        <div class="results-section">
+            <div class="results-header">
+                <h2>Results</h2>
+            </div>
+            
+            <div class="results-stats" id="statsContainer" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-number" id="pagesScanned">0</div>
+                    <div class="stat-label">Pages Scanned</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pagesWithErrors">0</div>
+                    <div class="stat-label">Pages with Errors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalErrors">0</div>
+                    <div class="stat-label">Total Errors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="uniqueErrors">0</div>
+                    <div class="stat-label">Unique Errors</div>
+                </div>
+            </div>
+
+            <div class="results-output" id="resultsOutput">
+                <div class="loading">Configure your scan settings above and click "Start Scan" to begin.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Spelling checker implementation
+        class WebSpellChecker {
+            constructor() {
+                this.isRunning = false;
+                this.shouldStop = false;
+                this.results = {
+                    pagesScanned: 0,
+                    pagesWithErrors: 0,
+                    totalErrors: 0,
+                    uniqueErrors: new Set(),
+                    errorsByPage: {},
+                    commonErrors: {}
+                };
+                
+                // Common words to skip (including your custom terms)
+                this.skipWords = new Set([
+                    'website', 'online', 'email', 'login', 'signup', 'app', 'apps',
+                    'blog', 'homepage', 'webpage', 'url', 'html', 'css', 'javascript',
+                    'admin', 'username', 'password', 'logout', 'navbar', 'footer',
+                    'api', 'json', 'xml', 'pdf', 'gif', 'jpg', 'jpeg', 'png', 'svg',
+                    'occ', 'spinout', 'hei', 'ei', 'uoe', // Your custom terms
+                    'faq', 'ceo', 'cfo', 'cto', 'hr', 'pr', 'it', 'etc', 'vs'
+                ]);
+            }
+
+            async startScan() {
+                const url = document.getElementById('websiteUrl').value;
+                const maxPages = parseInt(document.getElementById('maxPages').value);
+                const delay = parseFloat(document.getElementById('delay').value) * 1000;
+                const language = document.getElementById('language').value;
+
+                if (!url || url === 'https://') {
+                    alert('Please enter a valid URL');
+                    return;
+                }
+
+                this.resetResults();
+                this.updateUI('scanning');
+                
+                try {
+                    await this.crawlWebsite(url, maxPages, delay, language);
+                } catch (error) {
+                    this.addToOutput(`Error: ${error.message}`, 'error');
+                } finally {
+                    this.updateUI('complete');
+                }
+            }
+
+            async crawlWebsite(baseUrl, maxPages, delay, language) {
+                this.isRunning = true;
+                this.shouldStop = false;
+                
+                const visited = new Set();
+                const toVisit = [baseUrl];
+                const baseDomain = new URL(baseUrl).hostname;
+
+                this.addToOutput(`Starting scan of: ${baseUrl}`);
+                this.addToOutput(`Language: ${language}, Max pages: ${maxPages}`);
+                this.addToOutput('─'.repeat(60));
+
+                while (toVisit.length > 0 && visited.size < maxPages && !this.shouldStop) {
+                    const currentUrl = toVisit.shift();
+                    
+                    if (visited.has(currentUrl)) continue;
+                    visited.add(currentUrl);
+
+                    try {
+                        await this.scanPage(currentUrl, baseDomain, toVisit, language);
+                        this.results.pagesScanned++;
+                        this.updateStats();
+                        
+                        // Update progress
+                        const progress = Math.min((visited.size / maxPages) * 100, 100);
+                        document.getElementById('progressFill').style.width = `${progress}%`;
+                        document.getElementById('progressText').textContent = 
+                            `Scanned ${visited.size} of ${maxPages} pages`;
+
+                        await this.sleep(delay);
+                    } catch (error) {
+                        this.addToOutput(`Error scanning ${currentUrl}: ${error.message}`);
+                    }
+                }
+
+                this.addToOutput('─'.repeat(60));
+                this.addToOutput(`Scan complete! Checked ${this.results.pagesScanned} pages.`);
+                this.generateSummary();
+            }
+
+            async scanPage(url, baseDomain, toVisit, language) {
+                this.addToOutput(`Scanning: ${url}`);
+                
+                // Note: This is a simplified version for demo purposes
+                // In a real implementation, you'd need a CORS proxy or server-side component
+                const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+                const html = await response.text();
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Extract text content
+                const textContent = this.extractTextContent(doc);
+                const words = this.extractWords(textContent);
+                
+                // Check spelling (simplified - in reality you'd use a proper spell check library)
+                const errors = this.checkSpelling(words, language);
+                
+                if (errors.length > 0) {
+                    this.results.errorsByPage[url] = errors;
+                    this.results.pagesWithErrors++;
+                    this.results.totalErrors += errors.length;
+                    
+                    errors.forEach(error => {
+                        this.results.uniqueErrors.add(error.word);
+                        this.results.commonErrors[error.word] = 
+                            (this.results.commonErrors[error.word] || 0) + 1;
+                    });
+                    
+                    this.addToOutput(`  Found ${errors.length} spelling errors:`, 'info');
+                    errors.slice(0, 5).forEach(error => {
+                        this.addToOutput(`    • ${error.word} → ${error.suggestions.join(', ')}`, 'error');
+                    });
+                    if (errors.length > 5) {
+                        this.addToOutput(`    ... and ${errors.length - 5} more errors`, 'info');
+                    }
+                } else {
+                    this.addToOutput('  No spelling errors found', 'success');
+                }
+                
+                // Extract links for further crawling
+                const links = doc.querySelectorAll('a[href]');
+                links.forEach(link => {
+                    try {
+                        const linkUrl = new URL(link.href, url);
+                        if (linkUrl.hostname === baseDomain && !toVisit.includes(linkUrl.href)) {
+                            toVisit.push(linkUrl.href);
+                        }
+                    } catch (e) {
+                        // Invalid URL, skip
+                    }
+                });
+            }
+
+            extractTextContent(doc) {
+                // Remove script and style elements
+                const scripts = doc.querySelectorAll('script, style, nav, header, footer');
+                scripts.forEach(el => el.remove());
+                
+                return doc.body ? doc.body.textContent : '';
+            }
+
+            extractWords(text) {
+                // Extract words, handling contractions
+                const words = text.match(/\b[a-zA-Z]+(?:'[a-zA-Z]+)?\b/g) || [];
+                return words
+                    .filter(word => word.length > 2)
+                    .map(word => word.toLowerCase());
+            }
+
+            checkSpelling(words, language) {
+                // Simplified spell checking - in a real implementation, 
+                // you'd use libraries like typo.js or a spell check API
+                const errors = [];
+                const commonMisspellings = {
+                    'recieve': ['receive'],
+                    'occured': ['occurred'],
+                    'seperate': ['separate'],
+                    'definately': ['definitely'],
+                    'accomodate': ['accommodate'],
+                    'neccessary': ['necessary'],
+                    'begining': ['beginning'],
+                    'enviroment': ['environment']
+                };
+
+                words.forEach(word => {
+                    if (this.skipWords.has(word)) return;
+                    if (word.length < 3) return;
+                    
+                    // Check against common misspellings
+                    if (commonMisspellings[word]) {
+                        errors.push({
+                            word: word,
+                            suggestions: commonMisspellings[word]
+                        });
+                    }
+                });
+
+                return errors;
+            }
+
+            generateSummary() {
+                this.addToOutput('\n' + '='.repeat(60));
+                this.addToOutput('SPELLING CHECK SUMMARY');
+                this.addToOutput('='.repeat(60));
+                
+                if (this.results.commonErrors && Object.keys(this.results.commonErrors).length > 0) {
+                    this.addToOutput('\nMost common errors:');
+                    const sortedErrors = Object.entries(this.results.commonErrors)
+                        .sort(([,a], [,b]) => b - a)
+                        .slice(0, 10);
+                    
+                    sortedErrors.forEach(([word, count]) => {
+                        this.addToOutput(`  ${word}: ${count} occurrences`);
+                    });
+                }
+            }
+
+            stopScan() {
+                this.shouldStop = true;
+                this.addToOutput('\nScan stopped by user.');
+                this.updateUI('complete');
+            }
+
+            resetResults() {
+                this.results = {
+                    pagesScanned: 0,
+                    pagesWithErrors: 0,
+                    totalErrors: 0,
+                    uniqueErrors: new Set(),
+                    errorsByPage: {},
+                    commonErrors: {}
+                };
+                this.updateStats();
+            }
+
+            updateStats() {
+                document.getElementById('pagesScanned').textContent = this.results.pagesScanned;
+                document.getElementById('pagesWithErrors').textContent = this.results.pagesWithErrors;
+                document.getElementById('totalErrors').textContent = this.results.totalErrors;
+                document.getElementById('uniqueErrors').textContent = this.results.uniqueErrors.size;
+                document.getElementById('statsContainer').style.display = 'grid';
+            }
+
+            updateUI(state) {
+                const startBtn = document.getElementById('startBtn');
+                const stopBtn = document.getElementById('stopBtn');
+                const saveBtn = document.getElementById('saveBtn');
+                const progressContainer = document.getElementById('progressContainer');
+
+                switch (state) {
+                    case 'scanning':
+                        startBtn.disabled = true;
+                        stopBtn.disabled = false;
+                        saveBtn.disabled = true;
+                        progressContainer.style.display = 'block';
+                        break;
+                    case 'complete':
+                        startBtn.disabled = false;
+                        stopBtn.disabled = true;
+                        saveBtn.disabled = false;
+                        progressContainer.style.display = 'none';
+                        this.isRunning = false;
+                        break;
+                }
+            }
+
+            addToOutput(text, type = 'normal') {
+                const output = document.getElementById('resultsOutput');
+                const div = document.createElement('div');
+                
+                switch (type) {
+                    case 'error':
+                        div.innerHTML = `<span class="error-line">${text}</span>`;
+                        break;
+                    case 'success':
+                        div.innerHTML = `<span style="color: #28a745;">${text}</span>`;
+                        break;
+                    case 'info':
+                        div.innerHTML = `<span style="color: #17a2b8;">${text}</span>`;
+                        break;
+                    default:
+                        div.textContent = text;
+                }
+                
+                output.appendChild(div);
+                output.scrollTop = output.scrollHeight;
+            }
+
+            clearOutput() {
+                document.getElementById('resultsOutput').innerHTML = 
+                    '<div class="loading">Configure your scan settings above and click "Start Scan" to begin.</div>';
+                document.getElementById('statsContainer').style.display = 'none';
+                this.resetResults();
+            }
+
+            saveReport() {
+                const report = {
+                    scanInfo: {
+                        timestamp: new Date().toISOString(),
+                        pagesScanned: this.results.pagesScanned,
+                        pagesWithErrors: this.results.pagesWithErrors,
+                        totalErrors: this.results.totalErrors,
+                        uniqueErrors: this.results.uniqueErrors.size
+                    },
+                    errorsByPage: this.results.errorsByPage,
+                    commonErrors: this.results.commonErrors
+                };
+
+                const blob = new Blob([JSON.stringify(report, null, 2)], 
+                    { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `spelling-report-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            const checker = new WebSpellChecker();
+
+            document.getElementById('startBtn').addEventListener('click', () => {
+                checker.startScan();
+            });
+
+            document.getElementById('stopBtn').addEventListener('click', () => {
+                checker.stopScan();
+            });
+
+            document.getElementById('saveBtn').addEventListener('click', () => {
+                checker.saveReport();
+            });
+
+            document.getElementById('clearBtn').addEventListener('click', () => {
+                checker.clearOutput();
+            });
+        });
+    </script>
+</body>
+</html>
